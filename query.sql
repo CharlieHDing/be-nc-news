@@ -7,7 +7,7 @@
 -- WHERE articles.article_id = 1
 -- GROUP BY articles.article_id;
 
--- SELECT *
--- FROM comments
--- WHERE article_id = 1;
+SELECT *
+FROM comments
+WHERE article_id = 1;
 

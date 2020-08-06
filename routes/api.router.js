@@ -4,7 +4,8 @@ const usersRouter = require('./users.router')
 const articlesRouter = require('./articles.router')
 const commentsRouter = require('./comments.router')
 const { Error405 } = require('../errors/errors')
-const { getEndpoints } = require('../controllers/api.controller')
+const listEndpoints = require('express-list-endpoints')
+
 
 const apiRouter = express.Router()
 
@@ -17,7 +18,10 @@ apiRouter.use('/articles', articlesRouter)
 apiRouter.use('/comments', commentsRouter)
 
 apiRouter.route('/')
-.get(getEndpoints)
+.get((req, res, next) => {
+        const endpoints = listEndpoints(apiRouter)
+        res.status(200).send({endpoints})
+})
 .all(Error405)
 
 module.exports = apiRouter

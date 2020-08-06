@@ -19,6 +19,37 @@ describe("/", () => {
       });
   });
   describe('/api',()=>{
+    describe('GET endpoints',()=>{
+      test('GET 200 - all endpoints returned',()=>{
+        return request(app).get('/api').expect(200).then((res)=>{
+            res.body.endpoints.forEach(endpoint=>{
+                expect(endpoint).toEqual(
+                  expect.objectContaining(
+                    {
+                      path: expect.any(String),
+                      methods: expect.any(Object),
+                      middleware: expect.any(Object)
+                    }
+                  )
+                );
+              })
+        })
+      })
+    })
+    describe('Invalid Methods',()=>{
+      test('Error 405 - invalid method',()=>{
+        const invalidMethods = ['put', 'post', 'patch', 'delete']
+        const promises = invalidMethods.map((method)=>{
+          return request(app)
+          [method]('/api')
+          .expect(405)
+          .then((res)=>{
+            expect(res.body.msg).toBe("Invalid method!")
+          })
+        })
+        return Promise.all(promises)
+      })
+    })
     describe('/topics',()=>{
       describe('GET topics',()=>{
         test('GET 200 - all topics returned',()=>{
@@ -508,20 +539,6 @@ describe("/", () => {
             })
           })
         })
-      })
-    })
-    describe('Invalid Methods',()=>{
-      test('Error 405 - invalid method',()=>{
-        const invalidMethods = ['put', 'patch', 'post', 'delete']
-        const promises = invalidMethods.map((method)=>{
-          return request(app)
-          [method]('/api/articles')
-          .expect(405)
-          .then((res)=>{
-            expect(res.body.msg).toBe("Invalid method!")
-          })
-        })
-        return Promise.all(promises)
       })
     })
   })

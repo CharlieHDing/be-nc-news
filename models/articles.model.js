@@ -20,27 +20,28 @@ const fetchArticleById = (req)=>{
 }
 
 const updateArticleById = (req)=>{
-    if(Object.keys(req.body).length > 1 ){
+    if(Object.keys(req.body).length !== 1 ){
         return Promise.reject({status:400, msg:'Whoops, invalid patch body!'})
     } else {
         const articleId = Number(req.params.article_id)
         let voteInc = req.body.inc_votes
         if (voteInc === undefined || typeof voteInc !== 'number'){
-            voteInc = 0
+            return Promise.reject({status:404, msg:'Whoops, invalid patch body!'})
+        } else {
+            return connection
+            .from('articles')
+            .where('article_id', articleId)
+            .increment('votes', voteInc)
+            .returning('*')
+            .then((articleArr)=>{
+                const article = articleArr[0]
+                if (article === undefined) {
+                    return Promise.reject({status:404, msg:`No article found for article_id: ${articleId}` })
+                } else {
+                    return article
+                }
+            })
         }
-        return connection
-        .from('articles')
-        .where('article_id', articleId)
-        .increment('votes', voteInc)
-        .returning('*')
-        .then((articleArr)=>{
-            const article = articleArr[0]
-            if (article === undefined) {
-                return Promise.reject({status:404, msg:`No article found for article_id: ${articleId}` })
-            } else {
-                return article
-            }
-        })
     }
 }
 
@@ -67,7 +68,7 @@ const addArticleComment = (req)=>{
     }
 }
 
-const fetchArticleComments = (article_id, {sort_by = "created_at", order = "asc"})=>{ 
+const fetchArticleComments = (article_id, {sort_by = "created_at", order = "desc"})=>{ 
     if (order === 'asc' || order === 'desc') {
         return connection
         .select('*')

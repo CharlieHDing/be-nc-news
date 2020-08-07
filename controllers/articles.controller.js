@@ -7,9 +7,9 @@ const getArticleById = (req, res, next) => {
     .catch(next)
 }
 
-const editArticleById = (req, res, next) => {
+const patchArticleById = (req, res, next) => {
     updateArticleById(req).then((article)=>{
-            res.status(201).send({article})
+            res.status(200).send({article})
     })
     .catch(next)
 }
@@ -31,11 +31,9 @@ const getArticleComments = (req, res, next) => {
 
 const getArticles = (req, res, next) => {
     fetchArticles(req.query).then((articles)=>{
-        if (articles.length === 0) {
-            res.status(204).send(null)
-        } else res.status(200).send({articles})
+        res.status(200).send({articles})
     })
     .catch(next)
 }
 
-module.exports = { getArticleById, editArticleById, postArticleComment, getArticleComments, getArticles}
+module.exports = { getArticleById, patchArticleById, postArticleComment, getArticleComments, getArticles}

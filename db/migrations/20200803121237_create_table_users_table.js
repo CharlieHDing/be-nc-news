@@ -1,8 +1,8 @@
 
 exports.up = function(knex) {
     return knex.schema.createTable('users', (usersTable) => {
-        usersTable.string('username', 50).primary()
-        usersTable.string('avatar_url', 250)
+        usersTable.string('username', 50).primary().notNullable()
+        usersTable.string('avatar_url', 250).notNullable()
         usersTable.string('name', 50)
     })
 };

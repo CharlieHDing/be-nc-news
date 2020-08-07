@@ -204,8 +204,10 @@ describe("/", () => {
           expect(res.body.articles).toBeSortedBy("article_id", {coerce:true, ascending:true})
           })
         })
-        test('GET 204 - No articles matching filter',()=>{
-          return request(app).get('/api/articles?topic=charlie').expect(204)
+        test('GET 200 - No articles matching filter',()=>{
+          return request(app).get('/api/articles?topic=charlie').expect(200).then((res)=>{
+            expect(res.body.articles).toEqual([])
+          })
         })
         test('GET 400 - undefined colum',()=>{
           return request(app)
@@ -264,11 +266,11 @@ describe("/", () => {
           })
         })
         describe('PATCH article',()=>{
-          test('PATCH 201 - article updated',()=>{
+          test('PATCH 200 - article updated',()=>{
             return request(app)
             .patch('/api/articles/1')
             .send({ inc_votes: -10 })
-            .expect(201)
+            .expect(200)
             .then((res)=>{
               expect(res.body.article).toEqual(
                 expect.objectContaining(
@@ -285,46 +287,22 @@ describe("/", () => {
               );
             })
           })
-          test("PATCH: 201 - invalid property name", () => {
+          test("PATCH: 404 - invalid property name", () => {
             return request(app)
               .patch("/api/articles/1")
               .send({ inc_vote: 30 })
-              .expect(201)
+              .expect(404)
               .then((res) => {
-                expect(res.body.article).toEqual(
-                  expect.objectContaining(
-                    {
-                      article_id: 1,
-                      title: expect.any(String),
-                      body: expect.any(String),
-                      votes: 100,
-                      topic: expect.any(String),
-                      author: expect.any(String),
-                      created_at: expect.any(String)
-                    }
-                  )
-                );
+                expect(res.body.msg).toEqual('Whoops, invalid patch body!')
               });
           });
-          test("PATCH: 201 - invalid property value type", () => {
+          test("PATCH: 404 - invalid property value type", () => {
             return request(app)
               .patch("/api/articles/1")
               .send({ inc_votes: '40' })
-              .expect(201)
+              .expect(404)
               .then((res) => {
-                expect(res.body.article).toEqual(
-                  expect.objectContaining(
-                    {
-                      article_id: 1,
-                      title: expect.any(String),
-                      body: expect.any(String),
-                      votes: 100,
-                      topic: expect.any(String),
-                      author: expect.any(String),
-                      created_at: expect.any(String)
-                    }
-                  )
-                );
+                expect(res.body.msg).toEqual('Whoops, invalid patch body!');
               });
           });
           test('PATCH 400 - bad request',()=>{
@@ -411,7 +389,7 @@ describe("/", () => {
             })
           })
           describe('GET comments',()=>{
-            test('GET 200 - all comments returned sorted by default in ascending order',()=>{
+            test('GET 200 - all comments returned sorted by default in descending order',()=>{
               return request(app)
               .get('/api/articles/1/comments')
               .expect(200)
@@ -430,10 +408,10 @@ describe("/", () => {
                     )
                   )
                 })
-                expect(res.body.comments).toBeSortedBy("created_at", {coerce:true, ascending:true})
+                expect(res.body.comments).toBeSortedBy("created_at", {coerce:true, descending:true})
               })
             })
-            test('GET 200 - all comments returned sorted by votes in ascending order',()=>{
+            test('GET 200 - all comments returned sorted by votes in descending order',()=>{
               return request(app)
               .get('/api/articles/1/comments?sort_by=votes')
               .expect(200)
@@ -452,7 +430,7 @@ describe("/", () => {
                     )
                   )
                 })
-                expect(res.body.comments).toBeSortedBy("votes", {coerce:true, ascending:true})
+                expect(res.body.comments).toBeSortedBy("votes", {coerce:true, descending:true})
               })
             })
             test('GET 200 - all comments returned sorted by default in descending order',()=>{
@@ -541,134 +519,112 @@ describe("/", () => {
         })
       })
     })
-  })
-  describe('/comments',()=>{
-    describe('/:comment_id',()=>{
-      describe('PATCH comment',()=>{
-        test('PATCH 201 - comment updated',()=>{
-          return request(app)
-          .patch('/api/comments/1')
-          .send({ inc_votes: -10 })
-          .expect(201)
-          .then((res)=>{
-            expect(res.body.comment).toEqual(
-              expect.objectContaining(
-                {
-                  comment_id: 1,
-                  author: expect.any(String),
-                  article_id: expect.any(Number),
-                  votes: 6,
-                  body: expect.any(String),
-                  created_at: expect.any(String)
-                }
-              )
-            );
-          })
-        })
-        test("PATCH: 201 - invalid property name", () => {
-          return request(app)
-            .patch("/api/comments/1")
-            .send({ inc_vote: 30 })
-            .expect(201)
-            .then((res) => {
-              expect(res.body.comment).toEqual(
-                expect.objectContaining(
-                  {
-                    comment_id: 1,
-                    author: expect.any(String),
-                    article_id: expect.any(Number),
-                    votes: 16,
-                    body: expect.any(String),
-                    created_at: expect.any(String)
-                  }
-                )
-              );
-            });
-        });
-        test("PATCH: 201 - invalid property value type", () => {
-          return request(app)
-            .patch("/api/comments/1")
-            .send({ inc_votes: '40' })
-            .expect(201)
-            .then((res) => {
-              expect(res.body.comment).toEqual(
-                expect.objectContaining(
-                  {
-                    comment_id: 1,
-                    author: expect.any(String),
-                    article_id: expect.any(Number),
-                    votes: 16,
-                    body: expect.any(String),
-                    created_at: expect.any(String)
-                  }
-                )
-              );
-            });
-            
-        });
-        test('PATCH 400 - bad request',()=>{
-          return request(app)
-          .patch('/api/comments/XXX')
-          .send({ inc_votes: 20 })
-          .expect(400)
-          .then((res)=>{
-            expect(res.body.msg).toEqual("Whoops, invalid request");
-          })
-        })
-        test("PATCH: 400 - invalid patch body", () => {
-          return request(app)
-            .patch("/api/articles/1")
-            .send({ inc_votes: 40, article_id: 1 })
-            .expect(400)
-            .then((res) => {
-              expect(res.body.msg).toBe('Whoops, invalid patch body!');
-            });
-        });
-        test('PATCH 404 - page not found',()=>{
-          return request(app)
-          .patch('/api/comments/999')
-          .send({ inc_votes: 50 })
-          .expect(404)
-          .then((res)=>{
-            expect(res.body.msg).toEqual("No comment found for comment_id: 999");
-          })
-        })
-      })
-      describe('DELETE comment',()=>{
-        test('DELETE 204 - comment updated',()=>{
-          return request(app)
-          .delete('/api/comments/1')
-          .expect(204)
-        })
-        test('DELETE 400 - bad request',()=>{
-          return request(app)
-          .delete('/api/comments/XXX')
-          .expect(400)
-          .then((res)=>{
-            expect(res.body.msg).toEqual("Whoops, invalid request");
-          })
-        })
-        test('DELETE 404 - page not found',()=>{
-          return request(app)
-          .delete('/api/comments/999')
-          .expect(404)
-          .then((res)=>{
-            expect(res.body.msg).toEqual("No comment found for comment_id: 999");
-          })
-        })
-      })
-      describe('Invalid Methods',()=>{
-        test('Error 405 - invalid method',()=>{
-          const invalidMethods = ['put', 'get', 'post']
-          const promises = invalidMethods.map((method)=>{
+    describe('/comments',()=>{
+      describe('/:comment_id',()=>{
+        describe('PATCH comment',()=>{
+          test('PATCH 200 - comment updated',()=>{
             return request(app)
-            [method]('/api/comments/2')
-            .expect(405)
+            .patch('/api/comments/1')
+            .send({ inc_votes: -10 })
+            .expect(200)
             .then((res)=>{
-              expect(res.body.msg).toBe("Invalid method!")
+              expect(res.body.comment).toEqual(
+                expect.objectContaining(
+                  {
+                    comment_id: 1,
+                    author: expect.any(String),
+                    article_id: expect.any(Number),
+                    votes: 6,
+                    body: expect.any(String),
+                    created_at: expect.any(String)
+                  }
+                )
+              );
             })
           })
-          return Promise.all(promises)
+          test("PATCH: 404 - invalid property name", () => {
+            return request(app)
+              .patch("/api/comments/1")
+              .send({ inc_vote: 30 })
+              .expect(404)
+              .then((res) => {
+                expect(res.body.msg).toEqual('Whoops, invalid patch body!');
+              });
+          });
+          test("PATCH: 404 - invalid property value type", () => {
+            return request(app)
+              .patch("/api/comments/1")
+              .send({ inc_votes: '40' })
+              .expect(404)
+              .then((res) => {
+                expect(res.body.msg).toEqual('Whoops, invalid patch body!');
+              });
+              
+          });
+          test('PATCH 400 - bad request',()=>{
+            return request(app)
+            .patch('/api/comments/XXX')
+            .send({ inc_votes: 20 })
+            .expect(400)
+            .then((res)=>{
+              expect(res.body.msg).toEqual("Whoops, invalid request");
+            })
+          })
+          test("PATCH: 400 - invalid patch body", () => {
+            return request(app)
+              .patch("/api/articles/1")
+              .send({ inc_votes: 40, article_id: 1 })
+              .expect(400)
+              .then((res) => {
+                expect(res.body.msg).toBe('Whoops, invalid patch body!');
+              });
+          });
+          test('PATCH 404 - page not found',()=>{
+            return request(app)
+            .patch('/api/comments/999')
+            .send({ inc_votes: 50 })
+            .expect(404)
+            .then((res)=>{
+              expect(res.body.msg).toEqual("No comment found for comment_id: 999");
+            })
+          })
+        })
+        describe('DELETE comment',()=>{
+          test('DELETE 204 - comment updated',()=>{
+            return request(app)
+            .delete('/api/comments/1')
+            .expect(204)
+          })
+          test('DELETE 400 - bad request',()=>{
+            return request(app)
+            .delete('/api/comments/XXX')
+            .expect(400)
+            .then((res)=>{
+              expect(res.body.msg).toEqual("Whoops, invalid request");
+            })
+          })
+          test('DELETE 404 - page not found',()=>{
+            return request(app)
+            .delete('/api/comments/999')
+            .expect(404)
+            .then((res)=>{
+              expect(res.body.msg).toEqual("No comment found for comment_id: 999");
+            })
+          })
+        })
+        describe('Invalid Methods',()=>{
+          test('Error 405 - invalid method',()=>{
+            const invalidMethods = ['put', 'get', 'post']
+            const promises = invalidMethods.map((method)=>{
+              return request(app)
+              [method]('/api/comments/2')
+              .expect(405)
+              .then((res)=>{
+                expect(res.body.msg).toBe("Invalid method!")
+              })
+            })
+            return Promise.all(promises)
+          })
         })
       })
     })

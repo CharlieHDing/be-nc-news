@@ -1,39 +1,39 @@
-const formatDates = (Array, dateKey = 'created_at') => {
-    const formArr = Array.map((Obj) => {
-        const objCopy = {...Obj}
-        const dateObj = new Date(objCopy[dateKey] * 1000)
-        delete objCopy[dateKey]
-        objCopy[dateKey] = dateObj
-        return objCopy
+const formatDates = (list, key = 'created_at') => {
+    const formArr = list.map((obj) => {
+        const newObj = {...obj}
+        const timestamp = new Date(newObj[key] * 1000)
+        delete newObj[key]
+        newObj[key] = timestamp
+        return newObj
     })
     return formArr
 };
 
 const makeRefObj = (list, key, value) => {
         const newObj = {}
-        list.forEach(function(object){
-            newObj[object[key]] = object[value]
+        list.forEach(function(obj){
+            newObj[obj[key]] = obj[value]
         })
         return newObj
     };
 
-const renameKeys = (array, keyToChange, newKey) => {
-    const output = array.map(function(object){
-        const objectCopy = {...object}
-        if (objectCopy.hasOwnProperty(keyToChange)) {
-            objectCopy[newKey] = objectCopy[keyToChange]
-            delete objectCopy[keyToChange]
-            return objectCopy
+const renameKeys = (list, keyToChange, newKey) => {
+    const output = list.map(function(obj){
+        const objCopy = {...obj}
+        if (objCopy.hasOwnProperty(keyToChange)) {
+            objCopy[newKey] = objCopy[keyToChange]
+            delete objCopy[keyToChange]
+            return objCopy
         }
     })
     return output
 };
 
-const useLookup = (array, refObj, key) => {
+const useLookup = (array, refObj, newKey, oldKey) => {
     const newArray = array.map(obj=>{
         const objCopy = {...obj}
-        objCopy[key] = refObj[objCopy.belongs_to]
-        delete objCopy.belongs_to
+        objCopy[newKey] = refObj[objCopy[oldKey]]
+        delete objCopy[oldKey]
         return objCopy
     })
     return newArray
@@ -43,7 +43,7 @@ const formatComments = (comments, articleData) => {
     const corrDates = formatDates(comments, 'created_at')
     const corrAuthors = renameKeys(corrDates, 'created_by', 'author')
     const articleRefObj = makeRefObj(articleData, 'title', 'article_id')
-    const corrArticleId = useLookup(corrAuthors, articleRefObj, 'article_id')
+    const corrArticleId = useLookup(corrAuthors, articleRefObj, 'article_id', 'belongs_to')
     return corrArticleId
 };
 

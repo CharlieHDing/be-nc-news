@@ -4,8 +4,8 @@ const testData = require('./test-data')
 
 const data = {
     test: testData,
-    development: devData
-    // production: data.development
+    development: devData,
+    production: devData
 }
 
 module.exports = data[ENV]

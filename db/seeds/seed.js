@@ -8,7 +8,7 @@ const {
 const { formatDates, formatComments, makeRefObj } = require('../utils/utils');
 
 exports.seed = function(knex) {
-
+console.log(topicData)
   return knex
   .migrate.rollback()
   .then(()=>knex.migrate.latest())
